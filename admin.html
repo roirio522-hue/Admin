@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Admin Panel | Customer List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; background: #f3f4f6; }
+        .table-container { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="pb-20">
+
+    <nav class="bg-blue-600 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-user-shield text-2xl"></i>
+                <h1 class="font-bold text-xl uppercase tracking-tighter">Icon Admin</h1>
+            </div>
+            <a href="index.html" class="bg-white text-blue-600 px-4 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-gray-100 transition">
+                <i class="fas fa-eye mr-1"></i> Visit Site
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 mt-8 max-w-5xl">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 table-container">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="font-bold text-xl text-gray-800"><i class="fas fa-users text-blue-500 mr-2"></i>রেজিস্ট্রেশন করা কাস্টমার</h2>
+                    <p class="text-sm text-gray-400 mt-1">আপনার শপে যারা তথ্য দিয়ে লগইন করেছে তাদের তালিকা</p>
+                </div>
+                <button onclick="loadCustomerData()" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-100 transition">
+                    <i class="fas fa-sync-alt mr-1"></i> Refresh Data
+                </button>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-gray-50">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-bold">
+                        <tr>
+                            <th class="p-4 border-b">কাস্টমারের নাম</th>
+                            <th class="p-4 border-b">মোবাইল নম্বর</th>
+                            <th class="p-4 border-b">পূর্ণ ঠিকানা</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-list-body" class="divide-y text-sm text-gray-700">
+                        <tr>
+                            <td colspan="3" class="p-20 text-center">
+                                <i class="fas fa-spinner fa-spin text-3xl text-blue-500 mb-3"></i>
+                                <p class="text-gray-400">ডাটা লোড হচ্ছে, দয়া করে অপেক্ষা করুন...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // আপনার গুগল অ্যাপস স্ক্রিপ্ট লিঙ্ক
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuQZlWtQsRmodsjMbqjTqjPtEO9d-oUysUwmbqxhGgRhLYlbdgWoLZP2rEsap6uEnM/exec";
+
+        async function loadCustomerData() {
+            const tbody = document.getElementById('user-list-body');
+            
+            try {
+                // getUsers অ্যাকশন কল করা হয়েছে যা Sheet2 থেকে ডাটা আনবে
+                const response = await fetch(SCRIPT_URL + "?action=getUsers");
+                const users = await response.json();
+                
+                if(!users || users.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="p-20 text-center text-gray-400">
+                                <i class="fas fa-info-circle text-2xl mb-2"></i><br>
+                                শিটে এখনো কোনো কাস্টমার ডাটা নেই।
+                            </td>
+                        </tr>`;
+                    return;
+                }
+
+                // ডাটা সফলভাবে পাওয়া গেলে টেবিলে দেখানো
+                tbody.innerHTML = users.map(u => `
+                    <tr class="hover:bg-blue-50/30 transition">
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                                    ${u.name.charAt(0)}
+                                </div>
+                                <span class="font-semibold">${u.name}</span>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <a href="tel:${u.phone}" class="text-blue-600 hover:underline font-medium">
+                                <i class="fas fa-phone-alt text-[10px] mr-1"></i> ${u.phone}
+                            </a>
+                        </td>
+                        <td class="p-4 text-gray-500">
+                            <i class="fas fa-map-marker-alt text-[10px] mr-1 text-gray-300"></i> ${u.address}
+                        </td>
+                    </tr>
+                `).reverse().join(''); // reverse() দিলে নতুন কাস্টমার সবার উপরে দেখাবে
+
+            } catch (e) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="p-20 text-center text-red-400">
+                            <i class="fas fa-exclamation-triangle text-2xl mb-2"></i><br>
+                            ডাটা লোড করতে ব্যর্থ! গুগল স্ক্রিপ্ট লিঙ্কটি চেক করুন।
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        // পেজ লোড হওয়ার সাথে সাথে ডাটা কল হবে
+        window.onload = loadCustomerData;
+    </script>
+</body>
+</html>
